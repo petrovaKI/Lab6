@@ -2,13 +2,13 @@
 
 #include "CalcHash.hpp"
 
-// Флаги
 std::atomic<bool> continue_flag = true;
 std::atomic<bool> load_json_flag = false;
 //значение хеш-функции должно заканчиваться на N=4 нулей
 const char correct_end_of_hash[] = "0000";
 const size_t N = 4;
 
+//обработка ctrl+c
 void stop(int flag) {
   if (flag == SIGINT) {
     continue_flag = false;
@@ -95,6 +95,7 @@ void start(const int& argc, char **argv){
 
   for (size_t i = 0; i < M; i++) {
     //Запускаем расчёт хешей в M потоках
+    //ref - в потоки объект должен передаваться по ссылке
     threads.emplace_back(calculation, std::ref(json_obj));
   }
   for (auto& thread : threads) {
