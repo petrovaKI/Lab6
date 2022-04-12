@@ -11,7 +11,7 @@
 #include <atomic>
 #include <csignal>
 #include <nlohmann/json.hpp>
-#include "picosha2.h"
+#include <picosha2.h>
 #include "Logging.hpp"
 #include "MakeJson.hpp"
 
