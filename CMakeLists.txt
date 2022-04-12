@@ -30,7 +30,8 @@ hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
 find_package(Boost CONFIG REQUIRED filesystem log log_setup system thread)
 find_package(Threads)
-
+hunter_add_package(nlohmann_json)
+find_package(nlohmann_json CONFIG REQUIRED)
 add_library(${PROJECT_NAME} STATIC
         ${CMAKE_CURRENT_SOURCE_DIR}/sources/CalcHash.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/sources/Logging.cpp
