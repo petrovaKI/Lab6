@@ -20,58 +20,60 @@ HunterGate(
         SHA1 "95c47c92f68edb091b5d6d18924baabe02a6962a"
 )
 
-project(lab6)
+project(template)
 string(APPEND CMAKE_CXX_FLAGS " -pedantic -Werror -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-command-line-argument")
 string(APPEND CMAKE_CXX_FLAGS " -Wshadow -Wnon-virtual-dtor")
 
-hunter_add_package(Boost COMPONENTS filesystem log system thread)
 hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
-find_package(Boost CONFIG REQUIRED filesystem log log_setup system thread)
-find_package(Threads)
+
 hunter_add_package(nlohmann_json)
 find_package(nlohmann_json CONFIG REQUIRED)
-add_library(${PROJECT_NAME} STATIC
+
+hunter_add_package(Boost COMPONENTS filesystem log system thread)
+find_package(Boost CONFIG REQUIRED filesystem log log_setup system thread)
+
+hunter_add_package(Boost COMPONENTS log thread system)
+find_package(Boost CONFIG REQUIRED log thread system)
+
+add_library(template STATIC
         ${CMAKE_CURRENT_SOURCE_DIR}/sources/CalcHash.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/sources/Logging.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/sources/MakeJson.cpp
         )
-
+add_executable(tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
+        )
 add_executable(demo
         ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
         )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<BUILD_INTERFACE:${Boost_INCLUDE_DIR}>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third-party/PicoSHA2>"
         "$<INSTALL_INTERFACE:include>"
         )
 
-
-target_link_libraries(${PROJECT_NAME} ${Boost_LOG_SETUP_LIBRARY}
-        ${Boost_LOG_LIBRARY}
-        ${Boost_FILESYSTEM_LIBRARY}
-        ${Boost_THREAD_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY}
+target_include_directories(${PROJECT_NAME}
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third-party/PicSHA2
+        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/PicoSHA2
+        )
+target_link_libraries(demo ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}
         Boost::log_setup
         Boost::log
         Boost::thread
         Boost::filesystem
         Boost::system
-        )
+        nlohmann_json::nlohmann_json)
 
-target_link_libraries( demo ${PROJECT_NAME} )
-
-if(BUILD_TESTS)
-    add_executable(tests
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/test.cpp
-            )
-    target_link_libraries(tests ${PROJECT_NAME} GTest::gtest_main)
-    enable_testing()
-    add_test(NAME unit_tests COMMAND tests)
-endif()
+target_link_libraries(
+        tests
+        template
+        GTest::gtest_main
+)
+enable_testing()
+add_test(NAME unit_tests COMMAND tests)
 
 if(BUILD_COVERAGE)
     set(ENABLE_COVERAGE ON CACHE BOOL "Enable coverage build." FORCE)
@@ -94,18 +96,3 @@ if(BUILD_DOCS)
 endif()
 
 include(CPackConfig.cmake)
-
-install(TARGETS ${PROJECT_NAME} demo
-        EXPORT "${PROJECT_NAME}-targets"
-        RUNTIME DESTINATION bin
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        INCLUDES DESTINATION include
-        )
-
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
-
-install(EXPORT "${PROJECT_NAME}-targets"
-        NAMESPACE "${PROJECT_NAME}::"
-        DESTINATION "lib/cmake"
-        )
